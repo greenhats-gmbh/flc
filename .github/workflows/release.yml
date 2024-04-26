@@ -1,3 +1,10 @@
+name: Deployment
+
+on:
+  release:
+    types:
+      - created
+
 jobs:
   release_linux:
     runs-on: ubuntu-latest
@@ -5,4 +12,15 @@ jobs:
       image: crystallang/crystal:latest-alpine
     steps:
       - uses: actions/checkout@v2
-      - run: shards build --production --release --static --no-debug
+      - run: |
+          shards build --production --release --static --no-debug
+          strip ./bin/flc
+      - name: Upload
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./bin/flc
+          asset_name: flc-linux-x86_64
+          asset_content_type: binary/octet-stream
