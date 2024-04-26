@@ -9,7 +9,6 @@ require "json"
 require "option_parser"
 require "system/user"
 require "uri"
-require "ncurses"
 
 # External library binding
 lib LibC
