@@ -6,7 +6,8 @@ Just check out the releases for the precompiled binaries or build it from source
 
 ### Pre build binaries (linux)
 ```zsh
-wget ...
+wget https://github.com/greenhats-gmbh/flc/releases/download/linux_x64/flc
+chmod +x flc
 ./flc
 ```
 
