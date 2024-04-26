@@ -1,0 +1,8 @@
+jobs:
+  release_linux:
+    runs-on: ubuntu-latest
+    container:
+      image: crystallang/crystal:latest-alpine
+    steps:
+      - uses: actions/checkout@v2
+      - run: shards build --production --release --static --no-debug
