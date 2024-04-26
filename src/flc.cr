@@ -1,5 +1,3 @@
-# FILEPATH: /home/flx/flc/src/flc.cr
-
 # This Crystal program is a command-line client for the flare.io Credential Browser API.
 # It allows users to query credentials for a specific domain and output the results in various formats.
 
