@@ -32,6 +32,17 @@ flc - flare.io Credential Browser Client
     -h, --help                       Show help
 ```
 
+```zsh
+./flc -d example.com -n 10
+[+] Display 2 (max: 10) credentials for domain: example.com
+----------------------------------------------------
+Identity          | Secret    | Source
+----------------------------------------------------
+bob@example.com   | Hackerman | Nice Combolist
+alice@example.com | Password7 | 2027 June Combolists
+
+```
+
 ### Examples
 
 Query for a domain and display results as a table: `flc example.com`
