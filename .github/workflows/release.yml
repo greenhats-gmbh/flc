@@ -15,12 +15,15 @@ jobs:
       - run: |
           shards build --production --release --static --no-debug
           strip ./bin/flc
-      - name: Upload
-        uses: actions/upload-release-asset@v1.0.1
+      - name: Create Release Linux x64
+        id: create_release
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./bin/flc
-          asset_name: flc-linux-x86_64
-          asset_content_type: binary/octet-stream
+          files: bin/flc
+          tag_name: linux_x64
+          name: Release Linux x64
+          body: This is the new release of the Linux x64 flc binary file
+          draft: false
+          prerelease: false
