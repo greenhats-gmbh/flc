@@ -1,18 +1,10 @@
-# flc
-
-TODO: Write a description here
+# flare.io Credential Broweser Client
 
 ## Installation
 
-TODO: Write installation instructions here
-
 ## Usage
 
-TODO: Write usage instructions here
-
 ## Development
-
-TODO: Write development instructions here
 
 ## Contributing
 
@@ -23,5 +15,3 @@ TODO: Write development instructions here
 5. Create a new Pull Request
 
 ## Contributors
-
-- [Paul Werther](https://github.com/your-github-user) - creator and maintainer
