@@ -115,6 +115,12 @@ client = HTTP::Client.new(URI.parse("https://api.flare.io"))
 response = client.get("/firework/v2/leaks/domains/#{domain}/credentials?size=#{number_of_results}&include_subdomains=true", headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})
 credentials = JSON.parse(response.body)["items"].as_a
 
+# Check if there are any credentials for the specified domain
+if credentials.empty?
+  puts "[-] No credentials found for domain: #{domain}"
+  exit
+end
+
 # Output the results based on the specified format
 case output_format
 when "i"
