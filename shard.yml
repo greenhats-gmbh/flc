@@ -1,0 +1,13 @@
+name: flc
+version: 0.1.0
+
+authors:
+  - Paul Werther <pw@evait.de>
+
+targets:
+  flc:
+    main: src/flc.cr
+
+crystal: '>= 1.12.1'
+
+license: MIT
