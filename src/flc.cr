@@ -19,6 +19,15 @@ domain = ""
 output_format = "table"
 number_of_results = "50"
 current_user = System::User.find_by(id: LibC.getuid.to_s)
+verbose = false
+
+def generate_jwt_token(api_key, tenant_id)
+  # Generate JWT token using API key and tenant ID
+  client = HTTP::Client.new(URI.parse("https://api.flare.io"))
+  client.basic_auth("", api_key)
+  response = client.post("/tokens/generate", body: "{\"tenant_id\": #{tenant_id}}")
+  return JSON.parse(response.body)["token"].to_s
+end
 
 # Parse command-line options
 option_parser = OptionParser.parse do |parser|
@@ -43,6 +52,11 @@ option_parser = OptionParser.parse do |parser|
   # option for the number of results to display
   parser.on "-n", "--number NUMBER", "Number of results to display (default 50)" do |n|
     number_of_results = n
+  end
+
+  # Show verbose output with the -v option
+  parser.on "-v", "--verbose", "Show verbose output" do |v|
+    verbose = true
   end
 
   # Show help and exit with the -h option
@@ -98,15 +112,33 @@ if number_of_results.match(/^\d+$/).nil?
   exit 1
 end
 
-# Generate JWT token using API key and tenant ID
-client = HTTP::Client.new(URI.parse("https://api.flare.io"))
-client.basic_auth("", api_key)
-response = client.post("/tokens/generate", body: "{\"tenant_id\": #{tenant_id}}")
-jwt_token = JSON.parse(response.body)["token"]
+# check if a JWT token is already generated and not expired and stored in the config file  ~/.config/flc/token
+token_file = File.join(config_dir, "token")
+jwt_token = ""
+
+if File.exists?(token_file)
+  puts "[*] Token file found. Checking if token is valid ..." if verbose
+  jwt_token = File.read(token_file).strip
+  client = HTTP::Client.new(URI.parse("https://api.flare.io"))
+  response = client.get("/tokens/test", headers: HTTP::Headers{"Authorization" => "Bearer #{jwt_token}"})
+  if response.status_code != 200
+    # if the token is expired or invalid, we need to generate a new one and store it in the config file
+    puts "[*] Code seems to be invalid. Generating JWT new token..." if verbose
+    jwt_token = generate_jwt_token(api_key, tenant_id)
+    File.open(token_file, "w") { |file| file.puts jwt_token }
+  else
+    puts "[+] Token is valid." if verbose
+  end
+else
+  # if the token is not found, we need to generate a new one and store it in the config file
+  puts "[*] No token file found. Generating new JWT token..." if verbose
+  jwt_token = generate_jwt_token(api_key, tenant_id)
+  File.open(token_file, "w") { |file| file.puts jwt_token }
+end
 
 # Check if JWT token is empty
 if jwt_token == ""
-  puts "[*] No JWT token found. Please check your API key and tenant id"
+  puts "[-] No JWT token found or generated. Please check your API key and tenant id"
   exit 1
 end
 
