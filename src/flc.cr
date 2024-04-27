@@ -45,6 +45,12 @@ option_parser = OptionParser.parse do |parser|
     value = e
   end
 
+  # Specify the password to query with the -p option
+  parser.on "-p", "--password PASSWORD", "The password to query" do |p|
+    query_type = "password"
+    value = p
+  end
+
   # Only output the identity (unique) with the -i option
   parser.on "-i", "--identity", "Only output the identity (unique)" do |o|
     output_format = "i"
@@ -169,6 +175,9 @@ when "domain"
 when "email"
   puts "[*] Querying credentials for email: #{value}" if verbose
   query = "/firework/v2/leaks/emails/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
+when "password"
+  puts "[*] Querying credentials for password: #{value}" if verbose
+  query = "/firework/v2/leaks/passwords/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
 end
 
 response = client.get(query, headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})

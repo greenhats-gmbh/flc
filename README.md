@@ -21,12 +21,12 @@ shards build
 ## Usage
 You must ensure that you meet the requirements. You need full access to the platform and the credentials browser feature (beta). Then you need to create an API key and know your tendent_id. Please refer to the official documentation: https://docs.flare.io/authentication-and-endpoints
 
-At current stage only the domain search is implemented.
 
 ```
 flc - flare.io Credential Browser Client
     -d, --domain DOMAIN              The domain to query (default first parameter)
     -e, --email EMAIL                The email address to query
+    -p, --password PASSWORD          The password to query
     -i, --identity                   Only output the identity (unique)
     -s, --secret                     Only output the secret (unique)
     -n, --number NUMBER              Number of results to display (default 50)
@@ -34,6 +34,12 @@ flc - flare.io Credential Browser Client
     -h, --help                       Show help
 
 ```
+
+### Examples
+
+Query for a domain and display results as a table: `flc example.com`
+Query for a domain and save only the unique passwords / hashes: `flc -d example.com -s > /dev/shm/credentials.txt`
+
 
 ```zsh
 ./flc -d example.com -n 10
@@ -59,10 +65,15 @@ bob@example.com   | Hackerman | Nice Combolist
 Hackerman
 ```
 
-### Examples
-
-Query for a domain and display results as a table: `flc example.com`
-Query for a domain and save only the unique passwords / hashes: `flc -d example.com -s > /dev/shm/credentials.txt`
+```zsh
+./flc -p Hackerman
+[+] Display 50 (max: 50) credentials for password: Hackerman
+----------------------------------------------------
+Identity          | Secret    | Source
+----------------------------------------------------
+bob@example.com   | Hackerman | Nice Combolist
+...
+```
 
 ## Development
 Any contribution is welcome. Just make an isse or pull request.
