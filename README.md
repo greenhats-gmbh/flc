@@ -26,10 +26,13 @@ At current stage only the domain search is implemented.
 ```
 flc - flare.io Credential Browser Client
     -d, --domain DOMAIN              The domain to query (default first parameter)
+    -e, --email EMAIL                The email address to query
     -i, --identity                   Only output the identity (unique)
     -s, --secret                     Only output the secret (unique)
     -n, --number NUMBER              Number of results to display (default 50)
+    -v, --verbose                    Show verbose output
     -h, --help                       Show help
+
 ```
 
 ```zsh
@@ -40,7 +43,20 @@ Identity          | Secret    | Source
 ----------------------------------------------------
 bob@example.com   | Hackerman | Nice Combolist
 alice@example.com | Password7 | 2027 June Combolists
+```
 
+```zsh
+./flc -e bob@example.com
+[+] Display 1 (max: 50) credentials for email: bob@example.com
+----------------------------------------------------
+Identity          | Secret    | Source
+----------------------------------------------------
+bob@example.com   | Hackerman | Nice Combolist
+```
+
+```zsh
+./flc -e bob@example.com -s
+Hackerman
 ```
 
 ### Examples

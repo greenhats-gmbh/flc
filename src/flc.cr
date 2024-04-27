@@ -15,7 +15,7 @@ end
 
 # Initialize variables
 query_type = ""
-domain = ""
+value = ""
 output_format = "table"
 number_of_results = "50"
 current_user = System::User.find_by(id: LibC.getuid.to_s)
@@ -36,7 +36,13 @@ option_parser = OptionParser.parse do |parser|
   # Specify the domain to query with the -d option
   parser.on "-d", "--domain DOMAIN", "The domain to query (default first parameter)" do |d|
     query_type = "domain"
-    domain = d
+    value = d
+  end
+
+  # Specify the email address to query with the -e option
+  parser.on "-e", "--email EMAIL", "The email address to query" do |e|
+    query_type = "email"
+    value = e
   end
 
   # Only output the identity (unique) with the -i option
@@ -69,7 +75,7 @@ end
 # Handle missing command-line options
 if query_type.empty?
   if ARGV.size != 0
-    domain = ARGV[0]
+    value = ARGV[0]
     query_type = "domain"
   else
     puts option_parser
@@ -100,11 +106,22 @@ if tenant_id.empty?
   exit 1
 end
 
-# before making any requests to the API we need to make sure that the domain matches the regex of a valid domain name and do not contain any bad characters
-if domain.match(/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/).nil?
-  puts "[!] Invalid domain name. Please provide a valid domain name."
-  exit 1
+# Validate the domain or email address
+case query_type
+when "domain"
+  # before making any requests to the API we need to make sure that the domain matches the regex of a valid domain name and do not contain any bad characters
+  if value.match(/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/).nil?
+    puts "[!] Invalid domain name. Please provide a valid domain name."
+    exit 1
+  end
+when "email"
+  # before making any requests to the API we need to make sure that the email matches the regex of a valid email address and do not contain any bad characters
+  if value.match(/\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i).nil?
+    puts "[!] Invalid email address. Please provide a valid email address."
+    exit 1
+  end
 end
+
 
 # make sure that provided number_of_results is a number
 if number_of_results.match(/^\d+$/).nil?
@@ -142,14 +159,32 @@ if jwt_token == ""
   exit 1
 end
 
-# Query credentials for the specified domain
+
 client = HTTP::Client.new(URI.parse("https://api.flare.io"))
-response = client.get("/firework/v2/leaks/domains/#{domain}/credentials?size=#{number_of_results}&include_subdomains=true", headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})
-credentials = JSON.parse(response.body)["items"].as_a
+query = ""
+case query_type
+when "domain"
+  puts "[*] Querying credentials for domain: #{value}" if verbose
+  query = "/firework/v2/leaks/domains/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
+when "email"
+  puts "[*] Querying credentials for email: #{value}" if verbose
+  query = "/firework/v2/leaks/emails/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
+end
+
+response = client.get(query, headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})
+
+# Check if the response is successful
+if response.status_code != 200
+  puts "[-] Error querying credentials: #{response.status_code}"
+  exit
+else
+  puts "[+] Successfully queried credentials" if verbose
+  credentials = JSON.parse(response.body)["items"].as_a
+end
 
 # Check if there are any credentials for the specified domain
 if credentials.empty?
-  puts "[-] No credentials found for domain: #{domain}"
+  puts "[-] No credentials found for #{query_type}: #{value}"
   exit
 end
 
@@ -169,7 +204,7 @@ else
   max_hash_length = credentials.map { |credential| credential["hash"].to_s.size }.max
   max_source_name = credentials.map { |credential| credential["source"]["name"].to_s.size }.max
 
-  puts "[+] Display #{credentials.size} (max: #{number_of_results}) credentials for domain: #{domain}"
+  puts "[+] Display #{credentials.size} (max: #{number_of_results}) credentials for #{query_type}: #{value}"
   puts "-" * (max_identity_name_length + max_hash_length + max_source_name + 5)
   puts "Identity".ljust(max_identity_name_length) + " | " + "Secret".ljust(max_hash_length) + " | " + "Source".ljust(max_source_name)
   puts "-" * (max_identity_name_length + max_hash_length + max_source_name + 5)
