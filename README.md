@@ -21,6 +21,8 @@ shards build
 ## Usage
 You must ensure that you meet the requirements. You need full access to the platform and the credentials browser feature (beta). Then you need to create an API key and know your tendent_id. Please refer to the official documentation: https://docs.flare.io/authentication-and-endpoints
 
+API key => `~/.config/flc/api_key`
+Tenant ID => `~/.config/flc/tenant_id`
 
 ```
 flc - flare.io Credential Browser Client
