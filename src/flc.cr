@@ -151,6 +151,15 @@ if File.exists?(token_file)
     File.open(token_file, "w") { |file| file.puts jwt_token }
   else
     puts "[+] Token is valid." if verbose
+    # checking if the token is expired (decoded token contains the expiration time)
+    decoded_token = JSON.parse(Base64.decode_string(jwt_token.split(".")[1]))
+    if Time.local.to_unix > decoded_token["exp"].to_s.to_i
+      puts "[*] Token is expired. Generating new JWT token..." if verbose
+      jwt_token = generate_jwt_token(api_key, tenant_id)
+      File.open(token_file, "w") { |file| file.puts jwt_token }
+    else
+      puts "[+] Token is not expired." if verbose
+    end
   end
 else
   # if the token is not found, we need to generate a new one and store it in the config file
