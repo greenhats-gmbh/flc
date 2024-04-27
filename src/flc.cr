@@ -20,6 +20,7 @@ output_format = "table"
 number_of_results = "50"
 current_user = System::User.find_by(id: LibC.getuid.to_s)
 verbose = false
+include_subdomains = "true"
 
 def generate_jwt_token(api_key, tenant_id)
   # Generate JWT token using API key and tenant ID
@@ -37,6 +38,11 @@ option_parser = OptionParser.parse do |parser|
   parser.on "-d", "--domain DOMAIN", "The domain to query (default first parameter)" do |d|
     query_type = "domain"
     value = d
+  end
+
+  # option for excluding subdomains (inclustion is the default)
+  parser.on "-x", "--exclude-subdomains", "Exclude subdomains (included by default)" do |x|
+    include_subdomains = "false"
   end
 
   # Specify the email address to query with the -e option
@@ -180,13 +186,13 @@ query = ""
 case query_type
 when "domain"
   puts "[*] Querying credentials for domain: #{value}" if verbose
-  query = "/firework/v2/leaks/domains/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
+  query = "/firework/v2/leaks/domains/#{value}/credentials?size=#{number_of_results}&include_subdomains=#{include_subdomains}"
 when "email"
   puts "[*] Querying credentials for email: #{value}" if verbose
-  query = "/firework/v2/leaks/emails/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
+  query = "/firework/v2/leaks/emails/#{value}/credentials?size=#{number_of_results}"
 when "password"
   puts "[*] Querying credentials for password: #{value}" if verbose
-  query = "/firework/v2/leaks/passwords/#{value}/credentials?size=#{number_of_results}&include_subdomains=true"
+  query = "/firework/v2/leaks/passwords/#{value}/credentials?size=#{number_of_results}"
 end
 
 response = client.get(query, headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})

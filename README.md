@@ -27,6 +27,7 @@ Tenant ID => `~/.config/flc/tenant_id`
 ```
 flc - flare.io Credential Browser Client
     -d, --domain DOMAIN              The domain to query (default first parameter)
+    -x, --exclude-subdomains         Exclude subdomains (included by default)
     -e, --email EMAIL                The email address to query
     -p, --password PASSWORD          The password to query
     -i, --identity                   Only output the identity (unique)
@@ -34,7 +35,6 @@ flc - flare.io Credential Browser Client
     -n, --number NUMBER              Number of results to display (default 50)
     -v, --verbose                    Show verbose output
     -h, --help                       Show help
-
 ```
 
 ### Examples
