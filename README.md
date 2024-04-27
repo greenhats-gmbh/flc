@@ -38,6 +38,7 @@ flc - flare.io Credential Browser Client
 ### Examples
 
 Query for a domain and display results as a table: `flc example.com`
+
 Query for a domain and save only the unique passwords / hashes: `flc -d example.com -s > /dev/shm/credentials.txt`
 
 
