@@ -21,6 +21,7 @@ number_of_results = "50"
 current_user = System::User.find_by(id: LibC.getuid.to_s)
 verbose = false
 include_subdomains = "true"
+get_all_results = false
 
 def generate_jwt_token(api_key, tenant_id)
   # Generate JWT token using API key and tenant ID
@@ -67,9 +68,9 @@ option_parser = OptionParser.parse do |parser|
     output_format = "s"
   end
 
-  # option for the number of results to display
-  parser.on "-n", "--number NUMBER", "Number of results to display (default 50)" do |n|
-    number_of_results = n
+  # Output the maximum number of results
+  parser.on "-a", "--all", "Search for all credentials (default 50)" do |n|
+    get_all_results = true
   end
 
   # Show verbose output with the -v option
@@ -134,13 +135,6 @@ when "email"
   end
 end
 
-
-# make sure that provided number_of_results is a number
-if number_of_results.match(/^\d+$/).nil?
-  puts "[!] Invalid number of results. Please provide a valid number."
-  exit 1
-end
-
 # check if a JWT token is already generated and not expired and stored in the config file  ~/.config/flc/token
 token_file = File.join(config_dir, "token")
 jwt_token = ""
@@ -183,6 +177,9 @@ end
 
 client = HTTP::Client.new(URI.parse("https://api.flare.io"))
 query = ""
+credentials = [] of JSON::Any
+number_of_results = 50 # default number of results
+
 case query_type
 when "domain"
   puts "[*] Querying credentials for domain: #{value}" if verbose
@@ -195,15 +192,39 @@ when "password"
   query = "/firework/v2/leaks/passwords/#{value}/credentials?size=#{number_of_results}"
 end
 
-response = client.get(query, headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})
+# Query the credentials based on the specified query type
+if get_all_results
+  puts "[*] Querying credentials for domain: #{value} (multiple requests)" if verbose
+  # patching the query to size=100 to get the maximum number of results per page
+  query = query.gsub("size=#{number_of_results}", "size=100")
 
-# Check if the response is successful
-if response.status_code != 200
-  puts "[-] Error querying credentials: #{response.status_code}"
-  exit
+  while true
+    response = client.get(query, headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})
+    if response.status_code != 200
+      puts "[-] Error querying credentials: #{response.status_code}"
+      exit
+    end
+    response_body = JSON.parse(response.body)
+
+    break if response_body["items"].as_a.empty?
+    puts "[+] Successfully queried #{response_body["items"].as_a.size} credentials" if verbose
+    credentials += response_body["items"].as_a
+
+    # patch the query to include the search_after parameter e.g. search_after=#{response_body["next"]}
+    # check if query has already search_after parameter then replace it with the new one otherwise add it to the query
+    query = query.includes?("search_after") ? query.gsub(/search_after=[^&]+/, "search_after=#{response_body["next"]}") : query + "&search_after=#{response_body["next"]}"
+  end
 else
-  puts "[+] Successfully queried credentials" if verbose
-  credentials = JSON.parse(response.body)["items"].as_a
+  response = client.get(query, headers: HTTP::Headers{"Cookie" => "token=#{jwt_token}"})
+
+  # Check if the response is successful
+  if response.status_code != 200
+    puts "[-] Error querying credentials: #{response.status_code}"
+    exit
+  else
+    puts "[+] Successfully queried credentials" if verbose
+    credentials = JSON.parse(response.body)["items"].as_a
+  end
 end
 
 # Check if there are any credentials for the specified domain
@@ -228,7 +249,7 @@ else
   max_hash_length = credentials.map { |credential| credential["hash"].to_s.size }.max
   max_source_name = credentials.map { |credential| credential["source"]["name"].to_s.size }.max
 
-  puts "[+] Display #{credentials.size} (max: #{number_of_results}) credentials for #{query_type}: #{value}"
+  puts "[+] Display #{credentials.size} (max: #{ get_all_results ? "∞" : number_of_results }) credentials for #{query_type}: #{value}"
   puts "-" * (max_identity_name_length + max_hash_length + max_source_name + 5)
   puts "Identity".ljust(max_identity_name_length) + " | " + "Secret".ljust(max_hash_length) + " | " + "Source".ljust(max_source_name)
   puts "-" * (max_identity_name_length + max_hash_length + max_source_name + 5)

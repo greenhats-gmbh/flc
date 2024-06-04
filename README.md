@@ -32,7 +32,7 @@ flc - flare.io Credential Browser Client
     -p, --password PASSWORD          The password to query
     -i, --identity                   Only output the identity (unique)
     -s, --secret                     Only output the secret (unique)
-    -n, --number NUMBER              Number of results to display (default 50)
+    -a, --all                        Search for all credentials (default 50)
     -v, --verbose                    Show verbose output
     -h, --help                       Show help
 ```
@@ -45,8 +45,8 @@ Query for a domain and save only the unique passwords / hashes: `flc -d example.
 
 
 ```zsh
-./flc -d example.com -n 10
-[+] Display 2 (max: 10) credentials for domain: example.com
+./flc -d example.com -a
+[+] Display 2 (max: ∞)) credentials for domain: example.com
 ----------------------------------------------------
 Identity          | Secret    | Source
 ----------------------------------------------------
