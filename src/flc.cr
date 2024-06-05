@@ -22,6 +22,8 @@ current_user = System::User.find_by(id: LibC.getuid.to_s)
 verbose = false
 include_subdomains = "true"
 get_all_results = false
+csv_export = false
+csv_file = ""
 
 def generate_jwt_token(api_key, tenant_id)
   # Generate JWT token using API key and tenant ID
@@ -73,6 +75,12 @@ option_parser = OptionParser.parse do |parser|
     get_all_results = true
   end
 
+  # output the data as csv
+  parser.on "-c", "--csv FILEPATH", "Output all the data to the target file as CSV regardless of -i or the -s option" do |c|
+    csv_export = true
+    csv_file = c
+  end
+
   # Show verbose output with the -v option
   parser.on "-v", "--verbose", "Show verbose output" do |v|
     verbose = true
@@ -93,6 +101,32 @@ if query_type.empty?
   else
     puts option_parser
     exit
+  end
+end
+
+if csv_export
+  # ensure that a filename is given and writeable
+  if csv_file.empty?
+    puts "[!] No filename given for CSV export"
+    exit 1
+  end
+
+  # check if the file already exists
+  if File.exists?(csv_file)
+    puts "[!] File #{csv_file} already exists. Do you want to overwrite it? (y/n)"
+    answer = STDIN.gets.to_s.chomp
+    if answer.downcase != "y"
+      puts "[*] Exiting..."
+      exit 1
+    end
+  end
+
+  # create the file if it does not exist and exits with error if it fails
+  begin
+    File.open(csv_file, "w") {}
+  rescue
+    puts "[!] Error creating file #{csv_file}"
+    exit 1
   end
 end
 
@@ -258,5 +292,15 @@ else
     identity_name = credential["identity_name"].to_s
     hash = credential["hash"].to_s
     puts identity_name.ljust(max_identity_name_length) + " | " + hash.ljust(max_hash_length) + " | " + credential["source"]["name"].to_s.ljust(max_source_name)
+  end
+end
+
+if csv_export
+  # write the data to the csv file
+  File.open(csv_file, "w") do |file|
+    file.puts "identity,secret,source"
+    credentials.each do |credential|
+      file.puts "#{credential["identity_name"]},#{credential["hash"]},#{credential["source"]["name"]}"
+    end
   end
 end
