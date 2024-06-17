@@ -47,20 +47,20 @@ Query for a domain and save only the unique passwords / hashes: `flc -d example.
 ```zsh
 ./flc -d example.com -a
 [+] Display 2 (max: ∞)) credentials for domain: example.com
-----------------------------------------------------
-Identity          | Secret    | Source
-----------------------------------------------------
-bob@example.com   | Hackerman | Nice Combolist
-alice@example.com | Password7 | 2027 June Combolists
+---------------------------------------------------------------------------------------
+First seen                       | Identity          | Secret    | Source
+---------------------------------------------------------------------------------------
+2024-04-10T09:09:09.840338+00:00 | bob@example.com   | Hackerman | Nice Combolist
+2023-07-20T19:20:31.696547+00:00 | alice@example.com | Password7 | 2027 June Combolists
 ```
 
 ```zsh
 ./flc -e bob@example.com
 [+] Display 1 (max: 50) credentials for email: bob@example.com
-----------------------------------------------------
-Identity          | Secret    | Source
-----------------------------------------------------
-bob@example.com   | Hackerman | Nice Combolist
+---------------------------------------------------------------------------------
+First seen                       | Identity          | Secret    | Source
+---------------------------------------------------------------------------------
+2024-04-10T09:09:09.840338+00:00 | bob@example.com   | Hackerman | Nice Combolist
 ```
 
 ```zsh
@@ -71,10 +71,10 @@ Hackerman
 ```zsh
 ./flc -p Hackerman
 [+] Display 50 (max: 50) credentials for password: Hackerman
-----------------------------------------------------
-Identity          | Secret    | Source
-----------------------------------------------------
-bob@example.com   | Hackerman | Nice Combolist
+---------------------------------------------------------------------------------
+First seen                       | Identity          | Secret    | Source
+---------------------------------------------------------------------------------
+2024-04-10T09:09:09.840338+00:00 | bob@example.com   | Hackerman | Nice Combolist
 ...
 ```
 
