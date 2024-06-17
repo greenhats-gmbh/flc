@@ -79,7 +79,7 @@ First seen                       | Identity          | Secret    | Source
 ```
 
 ## Development
-Any contribution is welcome. Just make an isse or pull request.
+Any contribution is welcome. Just make an issue or pull request.
 
 ## Contributing
 
