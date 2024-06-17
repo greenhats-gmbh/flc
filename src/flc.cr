@@ -279,28 +279,29 @@ when "s"
   unique_secrets.each { |secret| puts secret.to_s }
 else
   # Output results in table format
+  max_imported_at_length = credentials.map { |credential| credential["imported_at"].to_s.size }.max
   max_identity_name_length = credentials.map { |credential| credential["identity_name"].to_s.size }.max
   max_hash_length = credentials.map { |credential| credential["hash"].to_s.size }.max
   max_source_name = credentials.map { |credential| credential["source"]["name"].to_s.size }.max
 
   puts "[+] Display #{credentials.size} (max: #{ get_all_results ? "∞" : number_of_results }) credentials for #{query_type}: #{value}"
-  puts "-" * (max_identity_name_length + max_hash_length + max_source_name + 5)
-  puts "Identity".ljust(max_identity_name_length) + " | " + "Secret".ljust(max_hash_length) + " | " + "Source".ljust(max_source_name)
-  puts "-" * (max_identity_name_length + max_hash_length + max_source_name + 5)
+  puts "-" * (max_imported_at_length + max_identity_name_length + max_hash_length + max_source_name + 5)
+  puts "First seen".ljust(max_imported_at_length) + " | " + "Identity".ljust(max_identity_name_length) + " | " + "Secret".ljust(max_hash_length) + " | " + "Source".ljust(max_source_name)
+  puts "-" * (max_imported_at_length + max_identity_name_length + max_hash_length + max_source_name + 5)
 
   credentials.each do |credential|
     identity_name = credential["identity_name"].to_s
     hash = credential["hash"].to_s
-    puts identity_name.ljust(max_identity_name_length) + " | " + hash.ljust(max_hash_length) + " | " + credential["source"]["name"].to_s.ljust(max_source_name)
+    puts credential["imported_at"].to_s.ljust(max_source_name) + " | " + identity_name.ljust(max_identity_name_length) + " | " + hash.ljust(max_hash_length) + " | " + credential["source"]["name"].to_s.ljust(max_source_name)
   end
 end
 
 if csv_export
   # write the data to the csv file
   File.open(csv_file, "w") do |file|
-    file.puts "identity,secret,source"
+    file.puts "first_seen,identity,secret,source"
     credentials.each do |credential|
-      file.puts "#{credential["identity_name"]},#{credential["hash"]},#{credential["source"]["name"]}"
+      file.puts "#{credential["imported_at"]},#{credential["identity_name"]},#{credential["hash"]},#{credential["source"]["name"]}"
     end
   end
 end
