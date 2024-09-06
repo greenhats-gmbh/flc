@@ -1,5 +1,5 @@
 # flare.io Credential Browser Client
-This tool is able to make requests to the api.flare.io API, specifically to the /firework/v2/leaks/.../credentials endpoint, to query for leaked credentials directly from the command line. 
+This tool is able to make requests to the api.flare.io API, specifically to the leaksdb endpoint, to query for leaked credentials directly from the command line. Docs can be found on: https://api.docs.flare.io/api-reference/leaksdb/endpoints/get-credentials
 
 ## Installation
 Just check out the releases for the precompiled binaries or build it from source (no external shards needed).
