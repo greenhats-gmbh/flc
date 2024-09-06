@@ -20,7 +20,6 @@ output_format = "table"
 number_of_results = "50"
 current_user = System::User.find_by(id: LibC.getuid.to_s)
 verbose = false
-include_subdomains = "true"
 get_all_results = false
 csv_export = false
 csv_file = ""
@@ -41,11 +40,6 @@ option_parser = OptionParser.parse do |parser|
   parser.on "-d", "--domain DOMAIN", "The domain to query (default first parameter)" do |d|
     query_type = "domain"
     value = d
-  end
-
-  # option for excluding subdomains (inclustion is the default)
-  parser.on "-x", "--exclude-subdomains", "Exclude subdomains (included by default)" do |x|
-    include_subdomains = "false"
   end
 
   # Specify the email address to query with the -e option
@@ -217,17 +211,22 @@ number_of_results = 50 # default number of results
 case query_type
 when "domain"
   puts "[*] Querying credentials for domain: #{value}" if verbose
-  query = "/firework/v2/leaks/domains/#{value}/credentials?size=#{number_of_results}&include_subdomains=#{include_subdomains}"
+  query = "/leaksdb/v2/credentials/by_domain/#{value}?size=#{number_of_results}"
 when "email"
   puts "[*] Querying credentials for email: #{value}" if verbose
-  query = "/firework/v2/leaks/emails/#{value}/credentials?size=#{number_of_results}"
+  query = "/leaksdb/identities/by_keyword/#{value}?size=#{number_of_results}"
 when "password"
   puts "[*] Querying credentials for password: #{value}" if verbose
-  query = "/firework/v2/leaks/passwords/#{value}/credentials?size=#{number_of_results}"
+  query = "/leaksdb/identities/by_password/#{value}?size=#{number_of_results}"
+end
+
+# case query type is email or password we need to change the query to get all the results
+if get_all_results && (query_type == "email" || query_type == "password")
+  query = query.gsub("size=#{number_of_results}", "size=10000")
 end
 
 # Query the credentials based on the specified query type
-if get_all_results
+if get_all_results && query_type == "domain"
   puts "[*] Querying credentials for domain: #{value} (multiple requests)" if verbose
   # patching the query to size=100 to get the maximum number of results per page
   query = query.gsub("size=#{number_of_results}", "size=100")
@@ -257,7 +256,23 @@ else
     exit
   else
     puts "[+] Successfully queried credentials" if verbose
-    credentials = JSON.parse(response.body)["items"].as_a
+    # parse the response body depending on the query type
+    case query_type
+    when "domain"
+      credentials = JSON.parse(response.body)["items"].as_a
+    when "email"
+      # sample data
+      json_data = JSON.parse(response.body)
+      passwords = json_data.as_a.first["passwords"].as_a
+      # inject the identity name into the credentials
+      credentials = passwords.map { |password| {"identity_name" => json_data.as_a.first["name"], "hash" => password["hash"], "imported_at" => password["imported_at"], "source" => password["source"]} }
+    when "password"
+      # sample data
+      json_data = JSON.parse(response.body)
+      json_data.as_a.each do |identity|
+        credentials += identity["passwords"].as_a.map { |password| {"identity_name" => identity["name"], "hash" => password["hash"], "imported_at" => password["imported_at"], "source" => password["source"]} }
+      end
+    end
   end
 end
 
