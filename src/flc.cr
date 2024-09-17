@@ -260,12 +260,15 @@ else
     case query_type
     when "domain"
       credentials = JSON.parse(response.body)["items"].as_a
+
     when "email"
-      # sample data
       json_data = JSON.parse(response.body)
-      passwords = json_data.as_a.first["passwords"].as_a
-      # inject the identity name into the credentials
-      credentials = passwords.map { |password| {"identity_name" => json_data.as_a.first["name"], "hash" => password["hash"], "imported_at" => password["imported_at"], "source" => password["source"]} }
+      # if response is empty then exit
+      unless json_data.as_a.empty?
+        passwords = json_data.as_a.first["passwords"].as_a
+        # inject the identity name into the credentials
+        credentials = passwords.map { |password| {"identity_name" => json_data.as_a.first["name"], "hash" => password["hash"], "imported_at" => password["imported_at"], "source" => password["source"]} }
+      end
     when "password"
       # sample data
       json_data = JSON.parse(response.body)
