@@ -23,6 +23,7 @@ verbose = false
 get_all_results = false
 csv_export = false
 csv_file = ""
+markdown_output = false
 
 def generate_jwt_token(api_key, tenant_id)
   # Generate JWT token using API key and tenant ID
@@ -73,6 +74,11 @@ option_parser = OptionParser.parse do |parser|
   parser.on "-c", "--csv FILEPATH", "Output all the data to the target file as CSV regardless of -i or the -s option" do |c|
     csv_export = true
     csv_file = c
+  end
+
+  # output the data as markdown table
+  parser.on "-m", "--markdown", "Output the data as a Markdown table" do
+    markdown_output = true
   end
 
   # Show verbose output with the -v option
@@ -297,20 +303,33 @@ when "s"
   unique_secrets.each { |secret| puts secret.to_s }
 else
   # Output results in table format
-  max_imported_at_length = credentials.map { |credential| credential["imported_at"].to_s.size }.max
-  max_identity_name_length = credentials.map { |credential| credential["identity_name"].to_s.size }.max
-  max_hash_length = credentials.map { |credential| credential["hash"].to_s.size }.max
-  max_source_name = credentials.map { |credential| credential["source"]["name"].to_s.size }.max
+  if markdown_output
+    # Markdown table output
+    puts "| First seen | Identity | Secret | Source |"
+    puts "|---|---|---|---|"
+    credentials.each do |credential|
+      identity_name = credential["identity_name"].to_s
+      hash = credential["hash"].to_s
+      source = credential["source"]["name"].to_s
+      imported_at = credential["imported_at"].to_s
+      puts "| #{imported_at} | #{identity_name} | #{hash} | #{source} |"
+    end
+  else
+    max_imported_at_length = credentials.map { |credential| credential["imported_at"].to_s.size }.max
+    max_identity_name_length = credentials.map { |credential| credential["identity_name"].to_s.size }.max
+    max_hash_length = credentials.map { |credential| credential["hash"].to_s.size }.max
+    max_source_name = credentials.map { |credential| credential["source"]["name"].to_s.size }.max
 
-  puts "[+] Display #{credentials.size} (max: #{ get_all_results ? "∞" : number_of_results }) credentials for #{query_type}: #{value}"
-  puts "-" * (max_imported_at_length + max_identity_name_length + max_hash_length + max_source_name + 5)
-  puts "First seen".ljust(max_imported_at_length) + " | " + "Identity".ljust(max_identity_name_length) + " | " + "Secret".ljust(max_hash_length) + " | " + "Source".ljust(max_source_name)
-  puts "-" * (max_imported_at_length + max_identity_name_length + max_hash_length + max_source_name + 5)
+    puts "[+] Display #{credentials.size} (max: #{ get_all_results ? "∞" : number_of_results }) credentials for #{query_type}: #{value}"
+    puts "-" * (max_imported_at_length + max_identity_name_length + max_hash_length + max_source_name + 5)
+    puts "First seen".ljust(max_imported_at_length) + " | " + "Identity".ljust(max_identity_name_length) + " | " + "Secret".ljust(max_hash_length) + " | " + "Source".ljust(max_source_name)
+    puts "-" * (max_imported_at_length + max_identity_name_length + max_hash_length + max_source_name + 5)
 
-  credentials.each do |credential|
-    identity_name = credential["identity_name"].to_s
-    hash = credential["hash"].to_s
-    puts credential["imported_at"].to_s.ljust(max_source_name) + " | " + identity_name.ljust(max_identity_name_length) + " | " + hash.ljust(max_hash_length) + " | " + credential["source"]["name"].to_s.ljust(max_source_name)
+    credentials.each do |credential|
+      identity_name = credential["identity_name"].to_s
+      hash = credential["hash"].to_s
+      puts credential["imported_at"].to_s.ljust(max_source_name) + " | " + identity_name.ljust(max_identity_name_length) + " | " + hash.ljust(max_hash_length) + " | " + credential["source"]["name"].to_s.ljust(max_source_name)
+    end
   end
 end
 
